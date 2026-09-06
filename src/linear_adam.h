@@ -103,7 +103,7 @@ static inline void linear_adam_backward(void* context, const Matrix* batch_gradi
     mat_move_into(gradient_output, &prev_grad);
 }
 
-static inline Layer linear_adam_new(uint32_t fan_in, uint32_t fan_out, float betta_1, float betta_2) {
+static inline Layer linear_adam_new(uint32_t fan_in, uint32_t fan_out, float betta_1, float betta_2, float init_scale) {
     LinearAdam_Context* context = malloc(sizeof(LinearAdam_Context));
 
     context->betta_1 = betta_1;
@@ -121,9 +121,9 @@ static inline Layer linear_adam_new(uint32_t fan_in, uint32_t fan_out, float bet
     float range = sqrtf(6.0f / (float)(fan_in + fan_out));
 
     for (int i = 0; i < context->weights.rows; ++i) {
-        *mat_at(&context->biases, i, 0) = rand_float(-range, range);
+        *mat_at(&context->biases, i, 0) = rand_float(-range, range) * init_scale;
         for (int j = 0; j < context->weights.cols; ++j) {
-            *mat_at(&context->weights, i, j) = rand_float(-range, range);
+            *mat_at(&context->weights, i, j) = rand_float(-range, range) * init_scale;
         }
     }
 
@@ -135,8 +135,8 @@ static inline Layer linear_adam_new(uint32_t fan_in, uint32_t fan_out, float bet
     );
 }
 
-static inline Layer linear_adam_new_default(uint32_t fan_in, uint32_t fan_out) {
-    return linear_adam_new(fan_in, fan_out, 0.9f, 0.999f);
+static inline Layer linear_adam_new_default(uint32_t fan_in, uint32_t fan_out, float init_scale) {
+    return linear_adam_new(fan_in, fan_out, 0.9f, 0.999f, init_scale);
 }
 
 

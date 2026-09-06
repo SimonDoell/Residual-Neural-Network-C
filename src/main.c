@@ -9,26 +9,29 @@
 
 int main() {srand(time(0));
     NeuralNetwork network = nn_init();
+    network.learning_rate = 0.001f;
     uint32_t l1, l2, l3, l4, l5, l6;
     
-    l1 = nn_add_layer(&network, linear_adam_new_default(1 , 16), true);
+    l1 = nn_add_layer(&network, linear_adam_new_default(1 , 16, 0.2f), true);
          nn_add_layer(&network, ReLU_new(), true);
-    l2 = nn_add_layer(&network, linear_adam_new_default(16, 16), true);
+    l2 = nn_add_layer(&network, linear_adam_new_default(16, 16, 0.2f), true);
          nn_add_layer(&network, ReLU_new(), true);
-    l3 = nn_add_layer(&network, linear_adam_new_default(16, 16), true);
+    l3 = nn_add_layer(&network, linear_adam_new_default(16, 16, 0.2f), true);
          nn_add_layer(&network, ReLU_new(), true);
-    l4 = nn_add_layer(&network, linear_adam_new_default(16, 16), true);
+    l4 = nn_add_layer(&network, linear_adam_new_default(16, 16, 0.2f), true);
          nn_add_layer(&network, ReLU_new(), true);
-    l5 = nn_add_layer(&network, linear_adam_new_default(16, 16), true);
+    l5 = nn_add_layer(&network, linear_adam_new_default(16, 16, 0.2f), true);
          nn_add_layer(&network, ReLU_new(), true);
-    l6 = nn_add_layer(&network, linear_adam_new_default(16, 1 ), true);
-         // nn_add_layer(&network, Tanh_new(), true); // <-- Breaks for some reason!
-
+    l6 = nn_add_layer(&network, linear_adam_new_default(16, 1 , 0.2f), true);
+         nn_add_layer(&network, Tanh_new(), true);
+        
     nn_connect_layers(&network, l1, l2);
     nn_connect_layers(&network, l2, l3);
     nn_connect_layers(&network, l3, l4);
     nn_connect_layers(&network, l4, l5);
     nn_connect_layers(&network, l5, l6);
+    
+    nn_connect_layers(&network, l1, l6);
     
 
     nn_order_layers(&network); // Finalizing the NN structure
