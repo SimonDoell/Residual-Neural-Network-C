@@ -14,7 +14,7 @@ typedef struct {
 } Matrix;
 
 
-Matrix mat_matrix(uint32_t rows, uint32_t cols) {
+static inline Matrix mat_matrix(uint32_t rows, uint32_t cols) {
     assert(rows > 0 && cols > 0);
     Matrix result;
     result.rows = rows;
@@ -23,7 +23,7 @@ Matrix mat_matrix(uint32_t rows, uint32_t cols) {
     return result;
 }
 
-Matrix mat_vector(uint32_t rows) {
+static inline Matrix mat_vector(uint32_t rows) {
     assert(rows > 0);
     Matrix result;
     result.rows = rows;
@@ -32,7 +32,7 @@ Matrix mat_vector(uint32_t rows) {
     return result;
 }
 
-void mat_assert(const Matrix* matrix) {
+static inline void mat_assert(const Matrix* matrix) {
     assert(matrix != NULL);
     
     // Use-after-free  OR  Free-after-free  OR  False initilisation
@@ -41,7 +41,7 @@ void mat_assert(const Matrix* matrix) {
     assert(matrix->values != NULL);
 }
 
-void mat_free(Matrix* matrix) {
+static inline void mat_free(Matrix* matrix) {
     mat_assert(matrix);
     free(matrix->values);
     
@@ -50,18 +50,23 @@ void mat_free(Matrix* matrix) {
     matrix->values = NULL;
 }
 
-bool mat_same_shape(const Matrix* a, const Matrix* b) {
+static inline void mat_zero(Matrix* matrix) {
+    mat_assert(matrix);
+    memset(matrix->values, 0, sizeof(float) * matrix->rows * matrix->cols);
+}
+
+static inline bool mat_same_shape(const Matrix* a, const Matrix* b) {
     mat_assert(a);
     mat_assert(b);
     return (a->rows == b->rows && a->cols == b->cols);
 }
 
-uint32_t mat_value_count(const Matrix* matrix) {
+static inline uint32_t mat_value_count(const Matrix* matrix) {
     mat_assert(matrix);
     return matrix->rows * matrix->cols;
 }
 
-Matrix mat_copy(const Matrix* matrix) {
+static inline Matrix mat_copy(const Matrix* matrix) {
     mat_assert(matrix);
     
     Matrix copy = mat_matrix(matrix->rows, matrix->cols);
@@ -71,7 +76,7 @@ Matrix mat_copy(const Matrix* matrix) {
     return copy;
 }
 
-void mat_copy_into(Matrix* dest, const Matrix* src) {
+static inline void mat_copy_into(Matrix* dest, const Matrix* src) {
     mat_assert(src);
     mat_assert(dest);
     assert(dest != src);
@@ -84,7 +89,7 @@ void mat_copy_into(Matrix* dest, const Matrix* src) {
     }
 }
 
-void mat_move_into(Matrix* dest, Matrix* src) {
+static inline void mat_move_into(Matrix* dest, Matrix* src) {
     mat_assert(src);
     mat_assert(dest);
     assert(dest != src);
@@ -97,7 +102,7 @@ void mat_move_into(Matrix* dest, Matrix* src) {
     src->values = NULL;
 }
 
-float* mat_at(Matrix* matrix, uint32_t row, uint32_t col) {
+static inline float* mat_at(Matrix* matrix, uint32_t row, uint32_t col) {
     mat_assert(matrix);
     assert(row < matrix->rows);
     assert(col < matrix->cols);
@@ -105,7 +110,7 @@ float* mat_at(Matrix* matrix, uint32_t row, uint32_t col) {
     return &matrix->values[row + col * matrix->rows]; // Column-major
 }
 
-float mat_at_const(const Matrix* matrix, uint32_t row, uint32_t col) {
+static inline float mat_at_const(const Matrix* matrix, uint32_t row, uint32_t col) {
     mat_assert(matrix);
     assert(row < matrix->rows);
     assert(col < matrix->cols);
@@ -114,7 +119,7 @@ float mat_at_const(const Matrix* matrix, uint32_t row, uint32_t col) {
 }
 
 
-Matrix mat_transposed(const Matrix* matrix) {
+static inline Matrix mat_transposed(const Matrix* matrix) {
     mat_assert(matrix);
     
     Matrix result = mat_matrix(matrix->cols, matrix->rows);
@@ -126,7 +131,7 @@ Matrix mat_transposed(const Matrix* matrix) {
     return result;
 }
 
-Matrix mat_column(const Matrix* matrix, uint32_t column) {
+static inline Matrix mat_column(const Matrix* matrix, uint32_t column) {
     mat_assert(matrix);
     assert(column < matrix->cols);
     
@@ -138,7 +143,7 @@ Matrix mat_column(const Matrix* matrix, uint32_t column) {
     return result;
 }
 
-Matrix mat_sum_columns(const Matrix* matrix) {
+static inline Matrix mat_sum_columns(const Matrix* matrix) {
     mat_assert(matrix);
 
     Matrix result = mat_vector(matrix->rows);
@@ -150,7 +155,7 @@ Matrix mat_sum_columns(const Matrix* matrix) {
     return result;
 }
 
-Matrix mat_add(const Matrix* a, const Matrix* b) {
+static inline Matrix mat_add(const Matrix* a, const Matrix* b) {
     mat_assert(a);
     mat_assert(b);
     assert(mat_same_shape(a, b));
@@ -163,7 +168,7 @@ Matrix mat_add(const Matrix* a, const Matrix* b) {
     return result;
 }
 
-Matrix mat_sub(const Matrix* a, const Matrix* b) {
+static inline Matrix mat_sub(const Matrix* a, const Matrix* b) {
     mat_assert(a);
     mat_assert(b);
     assert(mat_same_shape(a, b));
@@ -176,7 +181,7 @@ Matrix mat_sub(const Matrix* a, const Matrix* b) {
     return result;
 }
 
-void mat_add_inplace(Matrix* a, const Matrix* b) {
+static inline void mat_add_inplace(Matrix* a, const Matrix* b) {
     mat_assert(a);
     mat_assert(b);
     assert(mat_same_shape(a, b));
@@ -185,7 +190,7 @@ void mat_add_inplace(Matrix* a, const Matrix* b) {
         a->values[i] += b->values[i];
 }
 
-void mat_sub_inplace(Matrix* a, const Matrix* b) {
+static inline void mat_sub_inplace(Matrix* a, const Matrix* b) {
     mat_assert(a);
     mat_assert(b);
     assert(mat_same_shape(a, b));
@@ -194,7 +199,7 @@ void mat_sub_inplace(Matrix* a, const Matrix* b) {
         a->values[i] -= b->values[i];
 }
 
-Matrix mat_fadd(const Matrix* a, const float b) {
+static inline Matrix mat_fadd(const Matrix* a, const float b) {
     mat_assert(a);
 
     Matrix result = mat_matrix(a->rows, a->cols);
@@ -205,7 +210,7 @@ Matrix mat_fadd(const Matrix* a, const float b) {
     return result;
 }
 
-Matrix mat_fsub(const Matrix* a, const float b) {
+static inline Matrix mat_fsub(const Matrix* a, const float b) {
     mat_assert(a);
 
     Matrix result = mat_matrix(a->rows, a->cols);
@@ -216,7 +221,7 @@ Matrix mat_fsub(const Matrix* a, const float b) {
     return result;
 }
 
-Matrix mat_fmul(const Matrix* a, const float b) {
+static inline Matrix mat_fmul(const Matrix* a, const float b) {
     mat_assert(a);
 
     Matrix result = mat_matrix(a->rows, a->cols);
@@ -227,7 +232,7 @@ Matrix mat_fmul(const Matrix* a, const float b) {
     return result;
 }
 
-Matrix mat_fdiv(const Matrix* a, const float b) {
+static inline Matrix mat_fdiv(const Matrix* a, const float b) {
     mat_assert(a);
     assert(b != 0);
 
@@ -239,14 +244,14 @@ Matrix mat_fdiv(const Matrix* a, const float b) {
     return result;
 }
 
-void mat_fmul_inplace(Matrix* a, const float b) {
+static inline void mat_fmul_inplace(Matrix* a, const float b) {
     mat_assert(a);
 
     for (int i = 0; i < mat_value_count(a); ++i)
         a->values[i] *= b;
 }
 
-void mat_fdiv_inplace(Matrix* a, const float b) {
+static inline void mat_fdiv_inplace(Matrix* a, const float b) {
     mat_assert(a);
     assert(b != 0);
 
@@ -255,7 +260,7 @@ void mat_fdiv_inplace(Matrix* a, const float b) {
 }
 
 
-void mat_push_vector(Matrix* matrix, const Matrix* vector) {
+static inline void mat_push_vector(Matrix* matrix, const Matrix* vector) {
     mat_assert(matrix);
     mat_assert(vector);
 
@@ -270,7 +275,7 @@ void mat_push_vector(Matrix* matrix, const Matrix* vector) {
         *mat_at(matrix, i, matrix->cols-1) = mat_at_const(vector, i, 0);
 }
 
-Matrix matmul(const Matrix* a, const Matrix* b) {
+static inline Matrix matmul(const Matrix* a, const Matrix* b) {
     mat_assert(a);
     mat_assert(b);
     assert(a->cols == b->rows);
@@ -294,7 +299,7 @@ Matrix matmul(const Matrix* a, const Matrix* b) {
 // --- Source Clanker: ChatGPT ---
 #define BLOCK 32
 
-Matrix f_matmul(const Matrix *a, const Matrix *b) {
+static inline Matrix f_matmul(const Matrix *a, const Matrix *b) {
     mat_assert(a);
     mat_assert(b);
     assert(a->cols == b->rows);
@@ -328,7 +333,7 @@ Matrix f_matmul(const Matrix *a, const Matrix *b) {
 }
 // --- Clanker slop ending ---
 
-void mat_add_bias_inplace(Matrix* matrix, const Matrix* vector) {
+static inline void mat_add_bias_inplace(Matrix* matrix, const Matrix* vector) {
     mat_assert(matrix);
     mat_assert(vector);
     assert(vector->cols == 1);
