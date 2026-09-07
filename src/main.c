@@ -77,12 +77,13 @@
 // }
 
 
-// Clanker:
+// AI generated:
 #include <time.h>
 #include <stdio.h>
 #include "layer.h"
 #include "linear_adam.h"
 #include "activation_layer.h"
+#include "rmsnorm.h"
 #include "network.h"
 
 float learn_function(float x) {
@@ -94,18 +95,20 @@ static NeuralNetwork build_network(float scaling) {
     network.learning_rate = 0.001f;
 
     nn_add_layer(&network, linear_adam_new_default(1, 16, scaling), true);
-    nn_add_layer(&network, ReLU_new(), true);
+    nn_add_layer(&network, RMSNorm_new(16), true);
+    nn_add_layer(&network, leakyReLU_new(), true);
 
-    for (int i = 0; i < 40; ++i) {
+    for (int i = 0; i < 10; ++i) {
         nn_add_layer(&network, linear_adam_new_default(16, 16, scaling), true);
-        nn_add_layer(&network, ReLU_new(), true);
+        nn_add_layer(&network, RMSNorm_new(16), true);
+        nn_add_layer(&network, leakyReLU_new(), true);
     }
 
     nn_add_layer(&network, linear_adam_new_default(16, 1, scaling), true);
     nn_add_layer(&network, leakyTanh_new(), true);
 
-    for (int i = 1; i < (int)network.layer_count - 4; i += 2) {
-        nn_connect_layers(&network, i, i + 2);
+    for (int i = 0; i < (int)network.layer_count - 6; i += 3) {
+        nn_connect_layers(&network, i, i + 3);
     }
 
     nn_order_layers(&network);
@@ -132,8 +135,28 @@ static void diagnostics(NeuralNetwork* network, int pre_out_idx, int step, int n
         mat_free(&o);
     }
     mat_free(&input);
-    printf("  step %6d: max|pre-tanh|=%9.4f   saturated(deriv<0.01)=%3d/%d\n",
-           step, max_abs, saturated, n_test);
+    printf("  step %6d: max|pre-tanh|=%9.4f   saturated(deriv<0.01)=%3d/%d\n", step, max_abs, saturated, n_test);
+    // printf("Layer gradient magnitudes:\n");
+
+    // Gradient magnitude
+    for (int i = 0; i < network->layer_count; ++i) {
+        float grad_sum = 0.0f;
+        float max_grad = 0.0f;
+
+        for (int j = 0; j < network->layers[i].gradient_output.rows; ++j) {
+            float grad = mat_at_const(&network->layers[i].gradient_output, j, 0);
+            grad_sum += powf(grad, 2);
+            max_grad = fmaxf(max_grad, grad);
+        }
+
+        grad_sum = sqrtf(grad_sum);
+
+        // printf("L%i: %f (max: %f) | ", i, grad_sum, max_grad);
+
+        // if (i % 5 == 0) printf("\n");
+    }
+    
+    printf("\n");
 }
 
 static void run(float scaling, unsigned seed, int steps, int log_every) {
@@ -159,7 +182,7 @@ static void run(float scaling, unsigned seed, int steps, int log_every) {
 
     // final test error, like the repo's own test loop
     double err = 0.0;
-    int iter = 2000;
+    int iter = 20000;
     for (int i = 0; i < iter; ++i) {
         input.values[0] = rand_float(0, 1);
         Matrix o = nn_forward(&network, &input);
@@ -178,8 +201,9 @@ int main() {
     int steps = 100000;
     int log_every = 5000;
 
-    run(0.05f, seed, steps, log_every);
+    run(0.30f, seed, steps, log_every);
     run(0.10f, seed, steps, log_every);
+    run(0.05f, seed, steps, log_every);
     run(0.01f, seed, steps, log_every);
 
     return 0;
