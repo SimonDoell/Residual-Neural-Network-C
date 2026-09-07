@@ -12,6 +12,14 @@ static inline float ReLU_derivative(float x) {return (x > 0.0f ? 1 : 0.0f);}
 static inline float Tanh_forward   (float x) {return tanhf(x);}
 static inline float Tanh_derivative(float x) {return 1.0f - powf(tanhf(x), 2);}
 
+static const float leakage = 1.15f;
+static inline float leakyTanh_forward   (float x) {return tanhf(x) * leakage;}
+static inline float leakyTanh_derivative(float x) {return (1.0f - powf(tanhf(x), 2)) * leakage;}
+
+static const float liniear_factor = 0.1f;
+static inline float linearTanh_forward   (float x) {return tanhf(x) + liniear_factor * x;}
+static inline float linearTanh_derivative(float x) {return (1.0f - powf(tanhf(x), 2)) + liniear_factor;}
+
 typedef struct {
     float(*forward)(float);
     float(*derivative)(float);
@@ -53,6 +61,8 @@ static inline Layer activation_layer_new(float(*forward)(float), float(*derivati
 
 static inline Layer ReLU_new() {return activation_layer_new(ReLU_forward, ReLU_derivative);}
 static inline Layer Tanh_new() {return activation_layer_new(Tanh_forward, Tanh_derivative);}
+static inline Layer leakyTanh_new() {return activation_layer_new(leakyTanh_forward, leakyTanh_derivative);}
+static inline Layer linearTanh_new() {return activation_layer_new(linearTanh_forward, linearTanh_derivative);}
 
 
 #endif
